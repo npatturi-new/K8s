@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-generator
+spec:
+  schedule: "*/2 * * * *"    # every 2 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: busybox
+            command: ["sh", "-c", "echo Report generated at $(date)"]
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
