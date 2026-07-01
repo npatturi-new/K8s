@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 200
+  selector:
+    matchLabels:
+      app: order-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2 # create 2 extra during update
+      maxUnavailable: 1 # max 1 pod down during update
+  template:
+    metadata:
+      labels:
+        app: order-service
+        version: "v2.1"
+    spec:
+      containers:
+        - name: order-service
+          image: order-api:v1.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: order-config
+                  key: db_host
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: order-secrets
+                  key: db_password
+          resources:
+            requests:
+              memory: "25600Mi"
+              cpu: "2500m"
+            limits:
+              memory: "51200Mi"
+              cpu: "5000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 10
